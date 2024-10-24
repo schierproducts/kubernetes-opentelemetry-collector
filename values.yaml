@@ -4,7 +4,7 @@ opentelemetry-collector:
   image:
     repository: "otel/opentelemetry-collector-k8s"
   service:
-    internalTrafficPolicy: "Local"\
+    internalTrafficPolicy: "Local"
   global:
     mezmo:
       endpoint: "https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b"
