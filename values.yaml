@@ -1,5 +1,7 @@
 opentelemetry-collector:
-  mode: deployment
+  nameOverride: mezmo-otel-collector
+  namespaceOverride: mezmo
+  mode: daemonset
   replicaCount: 1
   image:
     repository: "otel/opentelemetry-collector-k8s"
@@ -30,10 +32,6 @@ opentelemetry-collector:
       enabled: true
       includeCollectorLogs: true
     hostMetrics:
-      enabled: true
-    clusterMetrics:
-      enabled: true
-    kubernetesEvents:
       enabled: true
 
   config:
