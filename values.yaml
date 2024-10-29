@@ -1,74 +1,11 @@
-opentelemetry-collector:
-  nameOverride: mezmo-otel-collector
-  namespaceOverride: mezmo
-  mode: daemonset
-  replicaCount: 1
-  image:
-    repository: "otel/opentelemetry-collector-k8s"
-  service:
-    internalTrafficPolicy: "Local"
-  global:
-    mezmo:
-      endpoint: "https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b"
-      token: "TJKyjktYh5MX2EvKoxQB/BtrIxtD0n5O4iq+deTZaEA="
-
-  clusterRole:
-    create: true
-    rules:
-      - verbs:
-          - get
-          - watch
-          - list
-        apiGroups:
-          - ''
-        resources:
-          - pods
-          - nodes
-
-  presets:
-    kubernetesAttributes:
-      enabled: true
-    logsCollection:
-      enabled: true
-      includeCollectorLogs: true
-    hostMetrics:
-      enabled: true
-
-  config:
-    receivers:
-      filelog: #This will collect new lines from log files in /var/log
-        include: [ /var/log/*.log ]
-      jaeger: #This will expose an endpoint where you can send traces
-        protocols:
-          grpc:
-            endpoint: "0.0.0.0:14250"
-    exporters:
-      otlphttp/mezmo-logs:
-        endpoint: "https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b"
-        headers:
-          Authorization: "gmNkm6iTMp8qDQffMjtLBqTVLFL0BbgO51MlgZZV7zI="
-      otlphttp/mezmo-metrics:
-        endpoint: "https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b"
-        headers:
-          Authorization: "TJKyjktYh5MX2EvKoxQB/BtrIxtD0n5O4iq+deTZaEA="
-      otlphttp/mezmo-traces:
-        endpoint: "https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b"
-        headers:
-          Authorization: "opU3y3Vkj5if4go5rXWzDpwJAb/frVTKmKdWEzIO6zs="
-
-    processors:
-      batch: { }
-
-    service:
-      pipelines:
-        logs:
-          receivers: [ filelog ]
-          exporters: [ otlphttp/mezmo-logs ]
-        traces:
-          receivers: [ jaeger ]
-          processors: [ batch ]
-          exporters: [ otlphttp/mezmo-traces ]
-        metrics:
-          receivers: [ hostmetrics ]
-          processors: [ batch ]
-          exporters: [ otlphttp/mezmo-metrics ]
+otelImage: registry-1.docker.io/otel/opentelemetry-collector-contrib:0.112.0
+mezmo:
+  logs:
+    endpoint: https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b
+    token: gmNkm6iTMp8qDQffMjtLBqTVLFL0BbgO51MlgZZV7zI=
+  metrics:
+    endpoint: https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b
+    token: TJKyjktYh5MX2EvKoxQB/BtrIxtD0n5O4iq+deTZaEA=
+  traces:
+    endpoint: https://pipeline.mezmo.com/v1/ccddefc4-8bdd-11ef-a162-eeb610165e9b
+    token: opU3y3Vkj5if4go5rXWzDpwJAb/frVTKmKdWEzIO6zs=

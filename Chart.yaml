@@ -1,21 +1,17 @@
 apiVersion: v2
-name: grease-monkey
+name: schier-kubernetes-opentelemetry-helm
 description: The Helm chart of the Schier Products Grease Monkey Application
 home: https://https://github.com/schierproducts/kubernetes-opentelemetry-collector
 maintainers:
   - name: dniccum
     email: "doug.niccum@schierproducts.com"
-    url: "https://dniccumdesign.com"
+    url: "https://schierproducts.com"
 keywords:
   - opentelemetry
   - helm
 sources:
   - https://github.com/https://github.com/schierproducts/kubernetes-opentelemetry-collector
   - https://open-telemetry.github.io/opentelemetry-helm-charts
-dependencies:
-  - name: opentelemetry-collector
-    version: 0.108.0
-    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
 icon: https://schierproducts.com/visuals/schier-pioneer-favicon.png
 
 # A chart can be either an 'application' or a 'library' chart.
@@ -31,7 +27,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.0
+version: 0.2.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to

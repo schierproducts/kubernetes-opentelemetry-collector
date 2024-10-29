@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-config
+  namespace: {{ .Release.Namespace }}
+data:
+  collector-config: | # yaml
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:POD_IP}:4317
+            max_recv_msg_size_mib: 64
+          http:
+            endpoint: ${env:POD_IP}:4318
+    processors:
+      # Batch process with default arguments
+      batch:
+      # Our backend has a max size of 2MB, which should ensure that we stay
+      # below that size.
+      batch/mezmo:
+        timeout: 5s
+        send_batch_size: 1000
+        send_batch_max_size: 1000
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 20
+      # Extract Kubernetes attributes to enrich data. This tries to pull the
+      # same labels as Sysdig.
+      k8sattributes:
+        extract:
+          metadata:
+            - k8s.container.name
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.deployment.name
+            - k8s.replicaset.name
+            - k8s.node.name
+            - k8s.daemonset.name
+            - k8s.cronjob.name
+            - k8s.job.name
+            - k8s.statefulset.name
+          labels:
+            - tag_name: k8s.pod.label.app
+              key: app
+              from: pod
+            - tag_name: k8s.pod.label.component
+              key: component
+              from: pod
+            - tag_name: k8s.pod.label.zone
+              key: zone
+              from: pod
+        pod_association:
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.uid
+          - sources:
+            - from: connection
+      # Add generic workload label to mimic what Sysdig provides by default
+      transform/add-workload-label:
+        metric_statements:
+          - context: datapoint
+            statements:
+            - set(attributes["kube_workload_name"], resource.attributes["k8s.deployment.name"])
+            - set(attributes["kube_workload_name"], resource.attributes["k8s.statefulset.name"])
+            - set(attributes["kube_workload_type"], "deployment") where resource.attributes["k8s.deployment.name"] != nil
+            - set(attributes["kube_workload_type"], "statefulset") where resource.attributes["k8s.statefulset.name"] != nil
+      # Sysdig uses kube instead of k8s, rename the attributes to match to ease
+      # the transition.
+      transform/rename-to-kube:
+        error_mode: ignore
+        metric_statements:
+          - context: resource
+            statements:
+              - replace_all_patterns(attributes, "key", "k8s\\.(.*)", "kube.$$1")
+    exporters:
+      otlphttp/mezmo-logs:
+        endpoint: {{ .Values.mezmo.logs.endpoint }}
+        headers:
+          Authorization: {{ .Values.mezmo.logs.token }}
+      otlphttp/mezmo-metrics:
+        endpoint: {{ .Values.mezmo.metrics.endpoint }}
+        headers:
+          Authorization: {{ .Values.mezmo.metrics.token }}
+      otlphttp/mezmo-traces:
+        endpoint: {{ .Values.mezmo.traces.endpoint }}
+        headers:
+          Authorization: {{ .Values.mezmo.traces.token }}
+    extensions:
+      zpages: {}
+    service:
+      extensions: [zpages]
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors:
+          - memory_limiter
+          - batch/mezmo
+          - k8sattributes
+          - transform/add-workload-label
+          - transform/rename-to-kube
+          exporters: [ otlphttp/mezmo-metrics ]
+        traces:
+          receivers: [otlp]
+          processors:
+          - memory_limiter
+          - batch
+          - k8sattributes
+          exporters: [ otlphttp/mezmo-traces ]
