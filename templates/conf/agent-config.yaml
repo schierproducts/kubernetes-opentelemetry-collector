@@ -52,7 +52,7 @@ data:
                   target_label: __scrape_interval__
     exporters:
       otlp:
-        endpoint: "otel-collector.otel.svc.cluster.local:4317"
+        endpoint: {{ .Release.Name }}-collector.{{ .Release.Namespace }}.svc.cluster.local:4317
         tls:
           insecure: true
         retry_on_failure:
