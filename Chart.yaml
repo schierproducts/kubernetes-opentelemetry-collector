@@ -12,6 +12,10 @@ keywords:
 sources:
   - https://github.com/https://github.com/schierproducts/kubernetes-opentelemetry-collector
   - https://open-telemetry.github.io/opentelemetry-helm-charts
+dependencies:
+  - name: opentelemetry-collector
+    version: 0.108.0
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
 icon: https://schierproducts.com/visuals/schier-pioneer-favicon.png
 
 # A chart can be either an 'application' or a 'library' chart.
